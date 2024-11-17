@@ -20,6 +20,7 @@ public final class GUI extends JFrame implements ActionListener {
     private LoggingOutputStream loggingOutputStream;
     private DefaultTableModel tableModel; // Reference to the table model
 
+
     public GUI() {
         initUI();
     }
@@ -104,7 +105,7 @@ public final class GUI extends JFrame implements ActionListener {
         JButton leftPanelContinueButton = new JButton("Continue");
         leftPanelContinueButton.addActionListener(this);
 
-        leftPanelExtraInformation = new JLabel("Parameters:");
+        leftPanelExtraInformation = new JLabel("Parameters:\n" + "rounds: ");
 
         gc.fill = GridBagConstraints.HORIZONTAL;
         gc.anchor = GridBagConstraints.FIRST_LINE_START;
@@ -125,6 +126,9 @@ public final class GUI extends JFrame implements ActionListener {
         leftPanel.add(leftPanelExtraInformation, gc);
 
         return leftPanel;
+    }
+    public void setLeftPanelExtraInformation(int R, double F){
+        leftPanelExtraInformation.setText("Parameters:\n" +  "rounds: " + R +"\n" + "comission fee: " + F);
     }
 
     private JPanel createCentralPanel() {
@@ -236,16 +240,22 @@ public final class GUI extends JFrame implements ActionListener {
         return rowData;
     }
 
-    public void updateRow(int rowIndex, String player, int payoff, String defects, String cooperates, String total) {
+    public void updateRow(int rowIndex, String player, int payoff, String move, String total) {
 
         Object[] row = getRow(rowIndex);
 
         int new_payoff = Integer.parseInt(row[1].toString()) + payoff;
+
         logLine(String.valueOf(new_payoff));
         tableModel.setValueAt(player, rowIndex, 0);
         tableModel.setValueAt(new_payoff, rowIndex, 1);
-        tableModel.setValueAt(defects, rowIndex, 2);
-        tableModel.setValueAt(cooperates, rowIndex, 3);
+        if (move.equals("D")) {
+            tableModel.setValueAt(Integer.parseInt(row[2].toString()) + 1, rowIndex, 2);
+        }else{
+            tableModel.setValueAt(Integer.parseInt(row[3].toString())+1, rowIndex, 3);
+        }
+
+
         tableModel.setValueAt(total, rowIndex, 4);
     }
     public void removeRow(int rowIndex) {

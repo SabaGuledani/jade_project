@@ -25,7 +25,7 @@ public class MainAgent extends Agent {
 
         updatePlayers();
         gui.logLine("Agent " + getAID().getName() + " is ready.");
-
+        gui.setLeftPanelExtraInformation(parameters.R, parameters.F);
 
 
     }
@@ -119,6 +119,7 @@ public class MainAgent extends Agent {
 
         private void playGame(PlayerInformation player1, PlayerInformation player2) {
             //Assuming player1.id < player2.id
+            int player1_action,player2_action;
             ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
             msg.addReceiver(player1.aid);
             msg.addReceiver(player2.aid);
@@ -158,8 +159,9 @@ public class MainAgent extends Agent {
             send(msg);
             msg.setContent("EndGame");
             send(msg);
-            gui.updateRow(player1.id, player1.aid.getName(), payoff[0], "0","1", "0");
-            gui.updateRow(player2.id, player2.aid.getName(), payoff[1], "0","1", "1");
+
+            gui.updateRow(player1.id, player1.aid.getName(), payoff[0], pos1, "0");
+            gui.updateRow(player2.id, player2.aid.getName(), payoff[1], pos2, "1");
 
         }
 
