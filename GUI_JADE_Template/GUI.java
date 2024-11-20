@@ -31,6 +31,7 @@ public final class GUI extends JFrame implements ActionListener {
         loggingOutputStream = new LoggingOutputStream (rightPanelLoggingTextArea);
     }
 
+
     public void log (String s) {
         Runnable appendLine = () -> {
             rightPanelLoggingTextArea.append('[' + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "] - " + s);
@@ -192,7 +193,7 @@ public final class GUI extends JFrame implements ActionListener {
         JPanel centralBottomSubpanel = new JPanel(new GridBagLayout());
 
         // Define column names for the table
-        String[] columnNames = {"Player", "Payoff", "Defects", "Cooperates", "Total"};
+        String[] columnNames = {"Player", "Payoff", "Stocks", "Defects", "Cooperates", "Total"};
 
         // Sample data for the table
         Object[][] initialData = {

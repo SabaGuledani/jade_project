@@ -7,6 +7,7 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 
+import java.io.PrintStream;
 import java.util.Random;
 
 public class RandomAgent extends Agent {
@@ -15,12 +16,16 @@ public class RandomAgent extends Agent {
     private AID mainAgent;
     private int myId, opponentId;
     private int N, S;
+    private GUI gui;
     private double F;
     private String[] moves_list = {"C","D"};
+    private double assets = 0.0;
     private ACLMessage msg;
 
     protected void setup() {
         state = State.s0NoConfig;
+        
+
 
         //Register in the yellow pages as a player
         DFAgentDescription dfd = new DFAgentDescription();
@@ -61,6 +66,7 @@ public class RandomAgent extends Agent {
             System.out.println(getAID().getName() + ":" + state.name());
             msg = blockingReceive();
             if (msg != null) {
+//                System.out.println("mivige shetyobineba stateshi = " + state);
                 System.out.println(getAID().getName() + " received " + msg.getContent() + " from " + msg.getSender().getName()); //DELETEME
                 //-------- Agent logic
                 switch (state) {
@@ -81,6 +87,7 @@ public class RandomAgent extends Agent {
                         }
                         break;
                     case s1AwaitingGame:
+//                        System.out.println(getAID().getName() + " aman miigo es ################ " + msg.getContent() + "es tipi:" + msg.getPerformative());
                         //If INFORM NEWGAME#_,_ PROCESS NEWGAME --> go to state 2
                         //If INFORM Id#_#_,_,_,_ PROCESS SETUP --> stay at s1
                         //Else ERROR
@@ -101,7 +108,36 @@ public class RandomAgent extends Agent {
                                 }
                                 if (gameStarted) state = State.s2Round;
                             }
-                        } else {
+                        }else if (msg.getPerformative() == ACLMessage.REQUEST){
+
+                            if (msg.getContent().startsWith("RoundOver")){
+                                ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+                                msg.addReceiver(mainAgent);
+                                String decision;
+                                double truncatedAmount;
+
+                                double randomDouble = Math.random();
+                                if (randomDouble > 0.5){
+                                    decision = "Buy";
+                                }else{
+                                    decision = "Sell";
+                                }
+
+                                double amount = new Random().nextDouble() * assets;
+                                while (amount == 0.0) {
+                                    amount = new Random().nextDouble() * assets;
+
+                                }
+                                if (amount != 0.0){
+                                    truncatedAmount = Math.floor(amount * 100) / 100.0;
+                                }else{
+                                    truncatedAmount = 0.0;
+                                }
+                                msg.setContent(decision + "#" + truncatedAmount);
+                                System.out.println(getAID().getName() + " decided to " + msg.getContent());
+                                send(msg);
+                            }
+                        }else {
                             System.out.println(getAID().getName() + ":" + state.name() + " - Unexpected message");
                         }
                         break;
@@ -119,9 +155,7 @@ public class RandomAgent extends Agent {
                             System.out.println(getAID().getName() + " sent " + msg.getContent());
                             send(msg);
                             state = State.s3AwaitingResult;
-                        } else if (msg.getPerformative() == ACLMessage.INFORM && msg.getContent().startsWith("Changed#")) {
-                            // Process changed message, in this case nothing
-                        } else if (msg.getPerformative() == ACLMessage.INFORM && msg.getContent().startsWith("EndGame")) {
+                        }  else if (msg.getPerformative() == ACLMessage.INFORM && msg.getContent().startsWith("EndGame")) {
                             state = State.s1AwaitingGame;
                         } else {
                             System.out.println(getAID().getName() + ":" + state.name() + " - Unexpected message:" + msg.getContent());
@@ -131,8 +165,10 @@ public class RandomAgent extends Agent {
                         //If INFORM RESULTS --> go to state 2
                         //Else error
                         if (msg.getPerformative() == ACLMessage.INFORM && msg.getContent().startsWith("Results#")) {
-                            //Process results
+                            double amountWon = processResults(msg.getContent());
+                            assets += amountWon;
                             state = State.s2Round;
+
                         } else {
                             System.out.println(getAID().getName() + ":" + state.name() + " - Unexpected message");
                         }
@@ -170,6 +206,13 @@ public class RandomAgent extends Agent {
             F = tF;
             myId = tMyId;
             return true;
+        }
+        private double processResults(String msgContent){
+            String[] contentSplit = msgContent.split("#");
+            String[] amountsSplit = contentSplit[3].split(",");
+            double amount_won = Double.parseDouble(amountsSplit[1]);
+
+            return amount_won;
         }
 
         /**

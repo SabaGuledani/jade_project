@@ -12,11 +12,12 @@ import java.util.ArrayList;
 
 public class MainAgent extends Agent {
 
-    private GUI gui;
+    public GUI gui;
     private AID[] playerAgents;
     private GameParametersStruct parameters = new GameParametersStruct();
     private int[] payoff;
     private String result;
+    
 
     @Override
     protected void setup() {
@@ -29,6 +30,7 @@ public class MainAgent extends Agent {
 
 
     }
+
 
     public int updatePlayers() {
         gui.logLine("Updating player list");
@@ -93,8 +95,23 @@ public class MainAgent extends Agent {
                         playGame(players.get(i), players.get(j));
                     }
                 }
+                for (int i = 0; i < players.size(); i++){
+//                    gui.logLine(players.get(i).aid);
+                    String final_decision;
+                    roundOver(players.get(i));
+                    ACLMessage decision = blockingReceive();
+                    processBuyOrSell(decision);
+
+                }
+
             }
 
+        }
+        private void processBuyOrSell(ACLMessage decisionMessage){
+
+            gui.logLine("Main Received decision " + decisionMessage.getContent() + " from " + decisionMessage.getSender().getName());
+            String[] decisionSplit = decisionMessage.getContent().split("#");
+            if
         }
 
         public static int[] getPayoff(String player1, String player2) {
@@ -119,7 +136,7 @@ public class MainAgent extends Agent {
 
         private void playGame(PlayerInformation player1, PlayerInformation player2) {
             //Assuming player1.id < player2.id
-            int player1_action,player2_action;
+
             ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
             msg.addReceiver(player1.aid);
             msg.addReceiver(player2.aid);
@@ -165,6 +182,15 @@ public class MainAgent extends Agent {
 
         }
 
+        private void roundOver(PlayerInformation player){
+            ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+            msg.addReceiver(player.aid);
+            String roundOverMessage = "RoundOver#" + player.id + "#" + player.aid.getName();
+            gui.logLine(roundOverMessage);
+            msg.setContent(roundOverMessage);
+            send(msg);
+
+        }
         @Override
         public boolean done() {
             return true;
