@@ -107,12 +107,28 @@ public class MainAgent extends Agent {
                     roundOver(players.get(i));
                     ACLMessage decision = blockingReceive();
                     processStockOperation(decision, players.get(i));
-
+                    gui.updateTable(players);
 
                 }
-                gui.updateTable(players);
+
+
 //                 Todo: da mere gameOver mesijis damateba
             }
+            gameOver(players);
+            gui.updateTable(players);
+
+        }
+        private void gameOver(ArrayList<PlayerInformation> players){
+            for (PlayerInformation player : players) {
+                player.sellStocks(player.stocks, stockPrice, parameters.F);
+                ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+                msg.addReceiver(player.aid);
+                String msgContent = "GameOver#" + player.id + "#" + player.currentPayoff;
+                gui.logLine(msgContent);
+                msg.setContent(msgContent);
+                send(msg);
+            }
+
 
         }
         private void processStockOperation(ACLMessage decisionMessage, PlayerInformation player){
@@ -284,7 +300,7 @@ public class MainAgent extends Agent {
 
         public GameParametersStruct() {
             N = 2;
-            R = 50;
+            R = 500;
             F = 0.05; //commission fee applied when selling stocks
             inflationRate = 0.05;
         }

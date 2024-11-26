@@ -108,7 +108,7 @@ public class RandomAgent extends Agent {
                                 }
                                 if (gameStarted) state = State.s2Round;
                             }else if(msg.getContent().startsWith("Accounting#")){
-
+                                System.out.println(msg.getContent());
                             }
                         }else if (msg.getPerformative() == ACLMessage.REQUEST){
                             roundOverStockOperations(msg);

@@ -254,6 +254,7 @@ public final class GUI extends JFrame implements ActionListener {
             tableModel.setValueAt(player.currentPayoff, i, 1);
             tableModel.setValueAt(player.decisionD, i, 2);
             tableModel.setValueAt(player.decisionC, i, 3);
+            tableModel.setValueAt(player.currentPayoff,i,4);
             tableModel.setValueAt(player.stocks, i, 5);
         }
     }
