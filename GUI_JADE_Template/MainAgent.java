@@ -15,9 +15,8 @@ public class MainAgent extends Agent {
     public GUI gui;
     private AID[] playerAgents;
     private GameParametersStruct parameters = new GameParametersStruct();
-    private int[] payoff;
     private String result;
-    
+    private double stockPrice = 1.5;
 
     @Override
     protected void setup() {
@@ -30,6 +29,8 @@ public class MainAgent extends Agent {
 
 
     }
+
+
 
 
     public int updatePlayers() {
@@ -54,7 +55,7 @@ public class MainAgent extends Agent {
         String[] playerNames = new String[playerAgents.length];
         for (int i = 0; i < playerAgents.length; i++) {
             playerNames[i] = playerAgents[i].getName();
-            gui.addRow(playerAgents[i].getName(), "0","0","0", "0");
+            gui.addRow(playerAgents[i].getName(), "0","0","0", "0", "0");
         }
         gui.setPlayersUI(playerNames);
 
@@ -95,24 +96,49 @@ public class MainAgent extends Agent {
                         playGame(players.get(i), players.get(j));
                     }
                 }
+                gui.logLine("results are: ");
+                for (int i = 0; i < players.size(); i++){
+                    Object[] row = gui.getRow(i);
+                    gui.logLine(row[0] + " payoff: " + row[1] + " stocks: " + row[5] );
+                }
                 for (int i = 0; i < players.size(); i++){
 //                    gui.logLine(players.get(i).aid);
                     String final_decision;
                     roundOver(players.get(i));
                     ACLMessage decision = blockingReceive();
-                    processBuyOrSell(decision);
+                    processStockOperation(decision, players.get(i));
+
 
                 }
-
+                gui.updateTable(players);
+//                 Todo: da mere gameOver mesijis damateba
             }
 
         }
-        private void processBuyOrSell(ACLMessage decisionMessage){
+        private void processStockOperation(ACLMessage decisionMessage, PlayerInformation player){
 
             gui.logLine("Main Received decision " + decisionMessage.getContent() + " from " + decisionMessage.getSender().getName());
             String[] decisionSplit = decisionMessage.getContent().split("#");
-            if
+            String decision = decisionSplit[0];
+            gui.logLine(decisionSplit[1]+ "this was decision 222");
+            double assetsToOperate = Double.parseDouble(decisionSplit[1]);
+
+            if (decision.equals("Buy")){
+                player.buyStocks(assetsToOperate, stockPrice);
+
+            }else if(decision.equals("Sell")){
+                player.sellStocks(assetsToOperate,stockPrice,parameters.F);
+            }
+            sendAccounting(player);
+
         }
+        public void sendAccounting(PlayerInformation player){
+            ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+            msg.addReceiver(player.aid);
+            msg.setContent("Accounting#" + player.id + "#" + player.currentPayoff + "#" + player.stocks);
+            send(msg);
+        }
+
 
         public static int[] getPayoff(String player1, String player2) {
             // Define payoffs as per the given rules
@@ -165,12 +191,12 @@ public class MainAgent extends Agent {
             gui.logLine("Main Received " + move2.getContent() + " from " + move2.getSender().getName());
             pos2 = move2.getContent().split("#")[1];
 
-            payoff = getPayoff(pos1,pos2);
+            int[] payoff = getPayoff(pos1, pos2);
 
             msg = new ACLMessage(ACLMessage.INFORM);
             msg.addReceiver(player1.aid);
             msg.addReceiver(player2.aid);
-            result = "Results#"+player1.id+","+player2.id+"#"+pos1+","+pos2+"#"+payoff[0]+","+payoff[1];
+            result = "Results#"+player1.id+","+player2.id+"#"+pos1+","+pos2+"#"+ payoff[0]+","+ payoff[1];
             msg.setContent(result) ;
             gui.logLine(result);
             send(msg);
@@ -179,14 +205,19 @@ public class MainAgent extends Agent {
 
             gui.updateRow(player1.id, player1.aid.getName(), payoff[0], pos1, "0");
             gui.updateRow(player2.id, player2.aid.getName(), payoff[1], pos2, "1");
+            player1.addToRoundPayoff(payoff[0]);
+            player2.addToRoundPayoff(payoff[1]);
 
         }
 
         private void roundOver(PlayerInformation player){
+            player.finishRound(parameters.inflationRate);
+
             ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
             msg.addReceiver(player.aid);
-            String roundOverMessage = "RoundOver#" + player.id + "#" + player.aid.getName();
-            gui.logLine(roundOverMessage);
+            Object[] row = gui.getRow(player.id);
+            String roundOverMessage = "RoundOver#" + player.id + "#" + player.roundPayoff + "#" + player.currentPayoff + "#" + parameters.inflationRate + "#" + player.stocks + "#" + stockPrice;
+            gui.logLine(roundOverMessage + "chemi yle cheidevi");
             msg.setContent(roundOverMessage);
             send(msg);
 
@@ -201,28 +232,61 @@ public class MainAgent extends Agent {
 
         AID aid;
         int id;
+        int roundPayoff, decisionC, decisionD;
+        double stocks, currentPayoff;
 
         public PlayerInformation(AID a, int i) {
             aid = a;
             id = i;
+            roundPayoff = 0;
+        }
+        public double truncate(double dbl){
+            return Double.parseDouble(String.format(" %.2f", dbl));
         }
 
         @Override
         public boolean equals(Object o) {
             return aid.equals(o);
         }
+
+        public void addToRoundPayoff(int payoffAmount){
+            roundPayoff += payoffAmount;
+        }
+
+        public void finishRound(double inflationRate){
+             currentPayoff = truncate((currentPayoff + roundPayoff) * (1-inflationRate));
+             roundPayoff = 0;
+        }
+
+        public void buyStocks(double amountToBuy, double stockPrice){
+            if (amountToBuy <= currentPayoff){
+                currentPayoff = truncate(currentPayoff - amountToBuy);
+                stocks = truncate(stocks + (amountToBuy/stockPrice));
+            }
+        }
+
+        public void sellStocks(double amountToSell, double stockPrice, double F){
+            if (amountToSell <= stocks){
+                stocks = truncate(stocks - amountToSell);
+                currentPayoff = truncate((currentPayoff + (amountToSell * stockPrice * (1-F))));
+            }
+        }
+
+
+
     }
 
     public class GameParametersStruct {
 
-        int N;
-        int R;
-        double F;
+        int N, R;
+        double F, inflationRate;
+
 
         public GameParametersStruct() {
             N = 2;
-            R = 4;
-            F = 0.05;
+            R = 50;
+            F = 0.05; //commission fee applied when selling stocks
+            inflationRate = 0.05;
         }
     }
 }

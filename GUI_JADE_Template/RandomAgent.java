@@ -1,3 +1,4 @@
+import com.sun.tools.javac.Main;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
@@ -16,15 +17,15 @@ public class RandomAgent extends Agent {
     private AID mainAgent;
     private int myId, opponentId;
     private int N, S;
-    private GUI gui;
     private double F;
     private String[] moves_list = {"C","D"};
-    private double assets = 0.0;
     private ACLMessage msg;
+
+
 
     protected void setup() {
         state = State.s0NoConfig;
-        
+
 
 
         //Register in the yellow pages as a player
@@ -41,7 +42,6 @@ public class RandomAgent extends Agent {
         }
         addBehaviour(new Play());
         System.out.println("RandomAgent " + getAID().getName() + " is ready.");
-
     }
 
     protected void takeDown() {
@@ -67,7 +67,7 @@ public class RandomAgent extends Agent {
             msg = blockingReceive();
             if (msg != null) {
 //                System.out.println("mivige shetyobineba stateshi = " + state);
-                System.out.println(getAID().getName() + " received " + msg.getContent() + " from " + msg.getSender().getName()); //DELETEME
+//                System.out.println(getAID().getName() + " received " + msg.getContent() + " from " + msg.getSender().getName()); //DELETEME
                 //-------- Agent logic
                 switch (state) {
                     case s0NoConfig:
@@ -107,40 +107,16 @@ public class RandomAgent extends Agent {
                                     System.out.println(getAID().getName() + ":" + state.name() + " - Bad message");
                                 }
                                 if (gameStarted) state = State.s2Round;
+                            }else if(msg.getContent().startsWith("Accounting#")){
+
                             }
                         }else if (msg.getPerformative() == ACLMessage.REQUEST){
-
-                            if (msg.getContent().startsWith("RoundOver")){
-                                ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-                                msg.addReceiver(mainAgent);
-                                String decision;
-                                double truncatedAmount;
-
-                                double randomDouble = Math.random();
-                                if (randomDouble > 0.5){
-                                    decision = "Buy";
-                                }else{
-                                    decision = "Sell";
-                                }
-
-                                double amount = new Random().nextDouble() * assets;
-                                while (amount == 0.0) {
-                                    amount = new Random().nextDouble() * assets;
-
-                                }
-                                if (amount != 0.0){
-                                    truncatedAmount = Math.floor(amount * 100) / 100.0;
-                                }else{
-                                    truncatedAmount = 0.0;
-                                }
-                                msg.setContent(decision + "#" + truncatedAmount);
-                                System.out.println(getAID().getName() + " decided to " + msg.getContent());
-                                send(msg);
-                            }
+                            roundOverStockOperations(msg);
                         }else {
                             System.out.println(getAID().getName() + ":" + state.name() + " - Unexpected message");
                         }
                         break;
+//                        TODO: davamato aq Accounting#4#190#38.15 mesijis migeba
                     case s2Round:
                         //If REQUEST Action --> INFORM Action --> go to state 3
                         //If INFORM CHANGED stay at state 2
@@ -165,8 +141,7 @@ public class RandomAgent extends Agent {
                         //If INFORM RESULTS --> go to state 2
                         //Else error
                         if (msg.getPerformative() == ACLMessage.INFORM && msg.getContent().startsWith("Results#")) {
-                            double amountWon = processResults(msg.getContent());
-                            assets += amountWon;
+
                             state = State.s2Round;
 
                         } else {
@@ -213,6 +188,39 @@ public class RandomAgent extends Agent {
             double amount_won = Double.parseDouble(amountsSplit[1]);
 
             return amount_won;
+        }
+
+
+        private void roundOverStockOperations(ACLMessage msgRecevied){
+
+            if (msgRecevied.getContent().startsWith("RoundOver")){
+
+
+                String decision;
+                double truncatedAmount;
+                double maxToOperate;
+                double randomDouble = Math.random();
+                if (randomDouble > 0.5){
+                    decision = "Buy";
+                }else{
+                    decision = "Sell";
+                }
+                if (decision.equals("Buy")){
+                    maxToOperate = Double.parseDouble(msgRecevied.getContent().split("#")[3]);
+                }else{
+                    maxToOperate = Double.parseDouble(msgRecevied.getContent().split("#")[5]);
+                }
+                if (maxToOperate != 0.0){
+                    maxToOperate = random.nextDouble(0,maxToOperate);
+
+                }
+
+                ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+                msg.addReceiver(mainAgent);
+                msg.setContent(decision + "#" + maxToOperate);
+                System.out.println(getAID().getName() + " decided to " + msg.getContent());
+                send(msg);
+            }
         }
 
         /**

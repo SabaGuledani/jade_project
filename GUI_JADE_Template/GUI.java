@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import javax.swing.table.DefaultTableModel;
 
 
@@ -193,7 +194,7 @@ public final class GUI extends JFrame implements ActionListener {
         JPanel centralBottomSubpanel = new JPanel(new GridBagLayout());
 
         // Define column names for the table
-        String[] columnNames = {"Player", "Payoff", "Stocks", "Defects", "Cooperates", "Total"};
+        String[] columnNames = {"Player", "Payoff", "Defects", "Cooperates", "Total", "Stocks"};
 
         // Sample data for the table
         Object[][] initialData = {
@@ -226,8 +227,8 @@ public final class GUI extends JFrame implements ActionListener {
 
         return centralBottomSubpanel;
     }
-    public void addRow(String player, String payoff, String defects, String cooperates, String total) {
-        tableModel.addRow(new Object[]{player, payoff, defects, cooperates, total});
+    public void addRow(String player, String payoff, String defects, String cooperates, String total, String stocks) {
+        tableModel.addRow(new Object[]{player, payoff, defects, cooperates, total, stocks});
     }
 
     public Object[] getRow(int rowIndex) {
@@ -240,12 +241,28 @@ public final class GUI extends JFrame implements ActionListener {
 
         return rowData;
     }
+    public void updateTable(ArrayList<MainAgent.PlayerInformation> players) {
+        for (int i = 0; i < tableModel.getRowCount(); i++) {
+            MainAgent.PlayerInformation player = null;
+            for (MainAgent.PlayerInformation p : players) {
+                if (tableModel.getValueAt(i, 0).equals(p.aid.getName())) {
+                    player = p;
+                    break;
+                }
+            }
+            if (player == null) continue;
+            tableModel.setValueAt(player.currentPayoff, i, 1);
+            tableModel.setValueAt(player.decisionD, i, 2);
+            tableModel.setValueAt(player.decisionC, i, 3);
+            tableModel.setValueAt(player.stocks, i, 5);
+        }
+    }
 
-    public void updateRow(int rowIndex, String player, int payoff, String move, String total) {
+    public void updateRow(int rowIndex, String player, double payoff, String move, String total) {
 
         Object[] row = getRow(rowIndex);
 
-        int new_payoff = Integer.parseInt(row[1].toString()) + payoff;
+        double new_payoff = Double.parseDouble(row[1].toString()) + payoff;
 
         logLine(String.valueOf(new_payoff));
         tableModel.setValueAt(player, rowIndex, 0);
@@ -258,6 +275,11 @@ public final class GUI extends JFrame implements ActionListener {
 
 
         tableModel.setValueAt(total, rowIndex, 4);
+    }
+
+    public void updateStockAndPayoff(int rowIndex, String stock,String payoff){
+        tableModel.setValueAt(payoff, rowIndex, 1);
+        tableModel.setValueAt(stock, rowIndex, 5);
     }
     public void removeRow(int rowIndex) {
         tableModel.removeRow(rowIndex);
