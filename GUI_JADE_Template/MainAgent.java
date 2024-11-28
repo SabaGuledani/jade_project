@@ -90,7 +90,10 @@ public class MainAgent extends Agent {
                 send(msg);
             }
             //Organize the matches
-            for(int current_round = 1; current_round < parameters.R; current_round++){
+            for(int current_round = 1; current_round <= parameters.R; current_round++){
+                gui.leftPanelRoundsLabel.setText(current_round + "/" + parameters.R);
+                parameters.inflationRate = getInflationRate(current_round);
+                stockPrice = getIndexValue(current_round);
                 for (int i = 0; i < players.size(); i++) {
                     for (int j = i + 1; j < players.size(); j++) { //too lazy to think, let's see if it works or it breaks
                         playGame(players.get(i), players.get(j));
@@ -154,6 +157,10 @@ public class MainAgent extends Agent {
             msg.setContent("Accounting#" + player.id + "#" + player.currentPayoff + "#" + player.stocks);
             send(msg);
         }
+        public double getIndexValue (int round){
+            return 7.35;
+        }
+        public double getInflationRate (int round){return 0.05;}
 
 
         public static int[] getPayoff(String player1, String player2) {
@@ -219,10 +226,21 @@ public class MainAgent extends Agent {
             msg.setContent("EndGame");
             send(msg);
 
-            gui.updateRow(player1.id, player1.aid.getName(), payoff[0], pos1, "0");
-            gui.updateRow(player2.id, player2.aid.getName(), payoff[1], pos2, "1");
+//            gui.updateRow(player1.id, player1.aid.getName(), payoff[0], pos1, "0");
+//            gui.updateRow(player2.id, player2.aid.getName(), payoff[1], pos2, "1");
             player1.addToRoundPayoff(payoff[0]);
             player2.addToRoundPayoff(payoff[1]);
+            if(pos1.equals("C")){
+                player1.decisionC++;
+            }else{
+                player1.decisionD++;
+            }
+            if (pos2.equals("C")){
+                player2.decisionC++;
+            }else{
+                player2.decisionD++;
+            }
+
 
         }
 
