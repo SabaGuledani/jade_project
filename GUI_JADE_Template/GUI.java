@@ -106,6 +106,8 @@ public final class GUI extends JFrame implements ActionListener {
         leftPanelStopButton.addActionListener(this);
         JButton leftPanelContinueButton = new JButton("Continue");
         leftPanelContinueButton.addActionListener(this);
+        JButton leftPanelSetRoundButton = getjButton();
+
 
         leftPanelExtraInformation = new JLabel("Parameters:\n" + "rounds: ");
 
@@ -124,11 +126,32 @@ public final class GUI extends JFrame implements ActionListener {
         gc.gridy = 3;
         leftPanel.add(leftPanelContinueButton, gc);
         gc.gridy = 4;
+        leftPanel.add(leftPanelSetRoundButton,gc);
+        gc.gridy = 5;
         gc.weighty = 10;
         leftPanel.add(leftPanelExtraInformation, gc);
 
         return leftPanel;
     }
+
+    private JButton getjButton() {
+        JButton leftPanelSetRoundButton = new JButton("Set rounds");
+        leftPanelSetRoundButton.addActionListener(actionEvent -> {
+            String input = JOptionPane.showInputDialog(new Frame("Configure rounds"), "How many rounds?");
+            if (input != null && !input.trim().isEmpty()) {
+                try {
+                    int rounds = Integer.parseInt(input.trim());
+                    leftPanelRoundsLabel.setText("Round 0 / " + rounds);
+                    mainAgent.parameters.R = rounds;
+                    logLine(rounds + " rounds");
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "Invalid input! Please enter a valid number.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+        return leftPanelSetRoundButton;
+    }
+
     public void setLeftPanelExtraInformation(int R, double F){
         leftPanelExtraInformation.setText("Parameters:\n" +  "rounds: " + R +"\n" + "comission fee: " + F);
     }
@@ -259,29 +282,6 @@ public final class GUI extends JFrame implements ActionListener {
         }
     }
 
-    public void updateRow(int rowIndex, String player, double payoff, String move, String total) {
-
-        Object[] row = getRow(rowIndex);
-
-        double new_payoff = Double.parseDouble(row[1].toString()) + payoff;
-
-        logLine(String.valueOf(new_payoff));
-        tableModel.setValueAt(player, rowIndex, 0);
-        tableModel.setValueAt(new_payoff, rowIndex, 1);
-        if (move.equals("D")) {
-            tableModel.setValueAt(Integer.parseInt(row[2].toString()) + 1, rowIndex, 2);
-        }else{
-            tableModel.setValueAt(Integer.parseInt(row[3].toString())+1, rowIndex, 3);
-        }
-
-
-        tableModel.setValueAt(total, rowIndex, 4);
-    }
-
-    public void updateStockAndPayoff(int rowIndex, String stock,String payoff){
-        tableModel.setValueAt(payoff, rowIndex, 1);
-        tableModel.setValueAt(stock, rowIndex, 5);
-    }
     public void removeRow(int rowIndex) {
         tableModel.removeRow(rowIndex);
     }

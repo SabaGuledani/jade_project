@@ -14,7 +14,7 @@ public class MainAgent extends Agent {
 
     public GUI gui;
     private AID[] playerAgents;
-    private GameParametersStruct parameters = new GameParametersStruct();
+    public GameParametersStruct parameters = new GameParametersStruct();
     private String result;
     private double stockPrice = 1.5;
 
@@ -114,8 +114,6 @@ public class MainAgent extends Agent {
 
                 }
 
-
-//                 Todo: da mere gameOver mesijis damateba
             }
             gameOver(players);
             gui.updateTable(players);
@@ -318,8 +316,8 @@ public class MainAgent extends Agent {
 
         public GameParametersStruct() {
             N = 2;
-            R = 500;
-            F = 0.05; //commission fee applied when selling stocks
+            R = 50;
+            F = 0.01; //commission fee applied when selling stocks
             inflationRate = 0.05;
         }
     }
