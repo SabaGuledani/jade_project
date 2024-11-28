@@ -107,6 +107,7 @@ public final class GUI extends JFrame implements ActionListener {
         JButton leftPanelContinueButton = new JButton("Continue");
         leftPanelContinueButton.addActionListener(actionEvent ->  mainAgent.stopped=false);
         JButton leftPanelSetRoundButton = getjButton();
+        JButton leftPanelSetCommissionFeeButton = getCommissionFeeButton();
 
 
         leftPanelExtraInformation = new JLabel("Parameters:\n" + "rounds: ");
@@ -128,6 +129,8 @@ public final class GUI extends JFrame implements ActionListener {
         gc.gridy = 4;
         leftPanel.add(leftPanelSetRoundButton,gc);
         gc.gridy = 5;
+        leftPanel.add(leftPanelSetCommissionFeeButton,gc);
+        gc.gridy = 6;
         gc.weighty = 10;
         leftPanel.add(leftPanelExtraInformation, gc);
 
@@ -150,6 +153,22 @@ public final class GUI extends JFrame implements ActionListener {
             }
         });
         return leftPanelSetRoundButton;
+    }
+    private JButton getCommissionFeeButton() {
+        JButton leftPanelSetCommissionFeeButton = new JButton("Set commission fee");
+        leftPanelSetCommissionFeeButton.addActionListener(actionEvent -> {
+            String input = JOptionPane.showInputDialog(new Frame("Configure commission fee"), "set fee");
+            if (input != null && !input.trim().isEmpty()) {
+                try {
+                    double fee = Double.parseDouble(input.trim());
+                    setLeftPanelExtraInformation(mainAgent.parameters.R, fee);
+                    mainAgent.parameters.F = fee;
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "Invalid input! Please enter a valid number.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+        return leftPanelSetCommissionFeeButton;
     }
 
     public void setLeftPanelExtraInformation(int R, double F){
