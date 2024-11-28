@@ -103,9 +103,9 @@ public final class GUI extends JFrame implements ActionListener {
         JButton leftPanelNewButton = new JButton("New");
         leftPanelNewButton.addActionListener(actionEvent -> mainAgent.newGame());
         JButton leftPanelStopButton = new JButton("Stop");
-        leftPanelStopButton.addActionListener(this);
+        leftPanelStopButton.addActionListener(actionEvent ->  mainAgent.stopped=true);
         JButton leftPanelContinueButton = new JButton("Continue");
-        leftPanelContinueButton.addActionListener(this);
+        leftPanelContinueButton.addActionListener(actionEvent ->  mainAgent.stopped=false);
         JButton leftPanelSetRoundButton = getjButton();
 
 

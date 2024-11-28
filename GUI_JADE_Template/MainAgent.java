@@ -16,6 +16,7 @@ public class MainAgent extends Agent {
     private AID[] playerAgents;
     public GameParametersStruct parameters = new GameParametersStruct();
     private String result;
+    public volatile boolean stopped = false;
     private double stockPrice = 1.5;
 
     @Override
@@ -111,6 +112,15 @@ public class MainAgent extends Agent {
                     ACLMessage decision = blockingReceive();
                     processStockOperation(decision, players.get(i));
                     gui.updateTable(players);
+
+                }
+                while (stopped) { // Wait if stopped
+
+                    try {
+                        Thread.sleep(100); // Reduce CPU usage while waiting
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
 
                 }
 
@@ -316,7 +326,7 @@ public class MainAgent extends Agent {
 
         public GameParametersStruct() {
             N = 2;
-            R = 50;
+            R = 200;
             F = 0.01; //commission fee applied when selling stocks
             inflationRate = 0.05;
         }
